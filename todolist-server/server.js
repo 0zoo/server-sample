@@ -65,7 +65,7 @@ const setupDatabase = function (config) {
         console.log("MongoDB reconnected");
       });
       db.on("error", (err) => {
-        console.log("Error in MongoDB: " + error);
+        console.log("Error in MongoDB: " + err);
       });
       db.on("disconnected", () => {
         console.log("MongoDB disconnected");
