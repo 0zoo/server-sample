@@ -1,15 +1,20 @@
 const User = require("../models/User");
 const _ = require("lodash");
 const bcrypt = require('bcrypt')
+const jwt = require("jsonwebtoken");
 
 const Joi = require("koa-joi-router").Joi;
 
-class ClientError extends Error {
-    constructor(message) {
-      super(message);
-      this.status = 400;
-    }
-  }
+const {
+    jwtSecret
+} = require("../config");
+
+console.log(jwtSecret);
+
+const {
+    ClientError,
+    NotFoundError,
+} = require("../error");
 
 // Validator - Joi validator
 
@@ -59,56 +64,53 @@ const postUser = {
     type: "json",
 },
     async handler(ctx) {
-        /*
-
-        // 1. 해당하는 사용자가 이미 존재하는지 확인
-        const {
-            email,
-            password,
-        } = ctx.request.body
-
-        const exist = await User.findOne({
-            email
-        }).exec();
-
-        if(!_.isNil(exist)){
-            throw new ClientError("Already exist email")
-        }
-        // 2. 비밀번호를 암호화해서 저장
-        const passwordHash = await bcrypt.hash(password, 10);
-        const user = new User({
-            ...ctx.request.body,
-            password : passwordHash
-        })
-
-        const data = (await user.save()).toObject();
-        delete data.password;
-
-        ctx.body = data;
-
-        //const user = new User(ctx.request.body)
-        // 기호에 맞게 원하는 방식으로 사용
-        // 1.
-        // const data = await user.save()
-        // ctx.body = data;
-        // 2.
-        // await user.save();
-        // ctx.body = user
-
-        */
-
-        // 위의 로직은 모델이 처리해주게 해줘야 한다.
         ctx.body = await User.signUp(ctx.request.body);
     }
 };
 
 const putUser = {
   path: "/users",
-  method: "POST",
+  method: "PUT",
+  validate: {
+    body: {
+        email: Joi.string().email(),
+        name: Joi.string(),
+        password: Joi.string().regex(passwordRegex,"password"),
+    },
+    type: "json",
+},
   async handler(ctx) {
     ctx.body = "put ok";
   }
 };
+
+// POST
+//   HTTP - Connection-less
+//      => Stateless
+ // Memory
+//    1. CPU Cache
+//    2. Memory
+//    3. SSD(HDD)
+//    4. Network Storage(Database) - MySQL, MongoDB
+//       Memory DB(Redis, Memcached) - Session Store
+ // User login
+//    Access Token: "XXXXXXXXXXXXXXASDQWEQWEQWE"
+//
+//   {
+//      _id: "",
+//      expiredAt: "...",
+//      permissions: [],
+//   }
+//   : JSON -> TOKEN -> JSON
+//   JWT(Json Web Token)
+ // Login 순서
+// 1. User 로그인 요청
+// 2. 비밀번호 검증
+// 3. 토큰(Access Token) 발급
+// 4. Database 저장(CREATE)
+ // Logout(GET)
+//  1. AccessToken 삭제
+
 
 const getUser = {
   path: "/users",
@@ -118,8 +120,53 @@ const getUser = {
   }
 };
 
+const signIn =  {
+    path: "/auth/login",
+    method: "POST",
+    validate:{
+        body: {
+            email: Joi.string().email().required(),
+            password: Joi.string().required(),
+        },
+        type: "json",
+    },
+    async handler(ctx){
+
+        const{
+            email,
+            password,
+        }= ctx.request.body;
+
+        const user = await User.findOneByEmail(email);
+        
+        if (_.isNil(user)) {
+            throw new NotFoundError("User not found");
+        }
+        
+        const verified = await bcrypt.compare(password, user.password);
+        
+        if (!verified) {
+            throw new ClientError("Invalid password");
+        }
+        // Token Generate
+        const token = jwt.sign({
+            data: {
+                user: user._id,
+            }
+            }, jwtSecret, {
+                expiresIn: '3h'
+            });
+            ctx.body = {
+                token,
+            };
+    }
+
+};
+
+
 module.exports = [
   getUser,
   postUser,
   putUser,
+  signIn,
 ];
