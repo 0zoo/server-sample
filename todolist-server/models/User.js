@@ -66,4 +66,42 @@ User.statics.signUp = async function(data){
   return ret;
 };
 
+User.methods.verifyPassword = async function(password){
+  return bcrypt.compare(password, user.password)
+};
+
+User.statics.signIn = async function(data){
+  const{
+    email,
+    password,
+  }= data;
+
+  const user = await this.findOneByEmail(email);
+
+  if (_.isNil(user)) {
+      throw new NotFoundError("User not found");
+  }
+
+  const verified = await user.verifyPassword(password);
+  // 여기서는 this가 아닌 user
+  // User.methods에 추가했기 때문에 (?)
+
+  if (!verified) {
+      throw new ClientError("Invalid password");
+  }
+
+
+  return user.generateToken();
+}
+
+User.methods.generateToken() = function(){
+  jwt.sign({
+    data: {
+        user: user._id,
+    }
+    }, jwtSecret, {
+        expiresIn: '3h'
+    });
+}
+
 module.exports = mongoose.model("User", User);
