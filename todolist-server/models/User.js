@@ -90,18 +90,17 @@ User.statics.signIn = async function(data){
       throw new ClientError("Invalid password");
   }
 
-
   return user.generateToken();
 }
 
-User.methods.generateToken() = function(){
-  jwt.sign({
+User.methods.generateToken = function () {
+  return jwt.sign({
     data: {
-        user: user._id,
+      user: this._id,
     }
-    }, jwtSecret, {
-        expiresIn: '3h'
-    });
+  }, jwtSecret, {
+    expiresIn: '3h'
+  });
 }
 
 module.exports = mongoose.model("User", User);
