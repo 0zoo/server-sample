@@ -1,19 +1,15 @@
 const User = require("../models/User");
 const _ = require("lodash");
-const bcrypt = require('bcrypt')
-const jwt = require("jsonwebtoken");
-const {
-    jwtSecret
-} = require("../config");
 
 const Joi = require("koa-joi-router").Joi;
 
-//console.log(jwtSecret);
-
 const {
     ClientError,
-    NotFoundError,
 } = require("../error");
+
+// Image upload
+//  Multipart POST
+//   : moudle
 
 // Validator - Joi validator
 
@@ -174,7 +170,7 @@ const updateUser = {
            const user = await User.findByIdAndUpdate(ctx.user._id, data, {
             new: true
           });
-        ctx.body = user;
+           ctx.body = user;
     },  
   };
   
