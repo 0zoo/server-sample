@@ -5,6 +5,11 @@ const Schema = mongoose.Schema;
 const bcrypt = require('bcrypt')
 const saltRounds = 10;
 
+const jwt = require("jsonwebtoken");
+const {
+    jwtSecret
+} = require("../config");
+
 const {
   ClientError,
 } = require("../error");
@@ -67,7 +72,7 @@ User.statics.signUp = async function(data){
 };
 
 User.methods.verifyPassword = async function(password){
-  return bcrypt.compare(password, user.password)
+  return bcrypt.compare(password, this.password)
 };
 
 User.statics.signIn = async function(data){
@@ -102,5 +107,23 @@ User.methods.generateToken = function () {
     expiresIn: '3h'
   });
 }
+
+User.statics.updateUser = async function(header, body){
+
+  const token = header.replace("Bearer ","");
+  //const decoded = jwt.verify(token,jwtSecret);
+
+  const data = jwt.decode(token).data
+
+  const user = await this.findByIdAndUpdate(data.user, body,{new: true})
+  
+  const ret = user.toObject();
+  delete ret.password;
+  delete ret._id;
+  delete ret.__v;
+
+  return ret;
+};
+
 
 module.exports = mongoose.model("User", User);

@@ -2,14 +2,13 @@ const User = require("../models/User");
 const _ = require("lodash");
 const bcrypt = require('bcrypt')
 const jwt = require("jsonwebtoken");
-
-const Joi = require("koa-joi-router").Joi;
-
 const {
     jwtSecret
 } = require("../config");
 
-console.log(jwtSecret);
+const Joi = require("koa-joi-router").Joi;
+
+//console.log(jwtSecret);
 
 const {
     ClientError,
@@ -131,37 +130,35 @@ const signIn =  {
         type: "json",
     },
     async handler(ctx){
-
-        const{
-            email,
-            password,
-        }= ctx.request.body;
-
-        const user = await User.findOneByEmail(email);
-        
-        if (_.isNil(user)) {
-            throw new NotFoundError("User not found");
-        }
-        
-        const verified = await bcrypt.compare(password, user.password);
-        
-        if (!verified) {
-            throw new ClientError("Invalid password");
-        }
-        // Token Generate
-        const token = jwt.sign({
-            data: {
-                user: user._id,
-            }
-            }, jwtSecret, {
-                expiresIn: '3h'
-            });
-            ctx.body = {
-                token,
-            };
+        const token = await User.signIn(ctx.request.body);
+        ctx.body = {
+        token,
+        };
     }
 
 };
+
+
+const updateUser = {
+    path: "/users/test",
+    method: "PUT",
+    validate: {
+        headers:{
+            authorization: Joi.string().required(),
+        },
+        body: {
+            email: Joi.string().email(),
+            name: Joi.string(),
+            password: Joi.string().regex(passwordRegex,"password"),
+        },
+        type: "json",
+  },
+    async handler(ctx) {
+        ctx.body = await User.updateUser(ctx.request.headers["authorization"], ctx.request.body);
+    },
+  };
+  
+
 
 
 module.exports = [
@@ -169,4 +166,5 @@ module.exports = [
   postUser,
   putUser,
   signIn,
+  updateUser,
 ];
