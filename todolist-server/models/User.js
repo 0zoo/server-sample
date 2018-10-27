@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const bcrypt = require('bcrypt')
-const saltRounds = 10;
 
 const jwt = require("jsonwebtoken");
 const {
@@ -26,6 +25,12 @@ const User = new Schema({
     type: String,
   },
 });
+
+User.statics.hashPassword = function (password) {
+  const saltRounds = 10;
+  return bcrypt.hash(password, saltRounds)
+}
+
 
 User.statics.findOneByEmail = async function(email){
   // return User.findOne({
@@ -55,7 +60,8 @@ User.statics.signUp = async function(data){
     throw new ClientError("Already exist email")
   }
 
-  const passwordHash = await bcrypt.hash(password,saltRounds);
+  //const passwordHash = await bcrypt.hash(password,saltRounds);
+  const passwordHash = this.hashPassword(password);
   
   // new User()로 하면 안됨!! 주의
   const user = new this({

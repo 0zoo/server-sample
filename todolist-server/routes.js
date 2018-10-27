@@ -3,6 +3,7 @@ const apiRouter = router();
 const Joi = router.Joi;
 
 const userContoller = require("./controllers/user");
+const imageContoller = require("./controllers/image");
 
 apiRouter.get("/", (ctx) => {
   ctx.body = "Hello, TODO Service"
@@ -17,6 +18,7 @@ apiRouter.get("/", (ctx) => {
 // ]);
 apiRouter.route([
   ...userContoller,
+  ...imageContoller,
 ]);
 
 module.exports = apiRouter;

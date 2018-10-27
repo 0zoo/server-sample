@@ -8,10 +8,7 @@ const app = new Koa();
 const router = require("./routes");
 
 const logHandler = require("./middlewares/logHandler");
-
-app.use(logHandler({
-  logger,
-}));
+const authHandler = require("./middlewares/authHandler");
 
 app.use(async (ctx, next) => {
     try {
@@ -26,6 +23,12 @@ app.use(async (ctx, next) => {
       ctx.app.emit("error", err, ctx);
     }
   });
+
+
+  app.use(logHandler({
+    logger,
+  }));
+  app.use(authHandler());
   
 // app.use(bodyParser());
 app.use(router.middleware());

@@ -112,12 +112,17 @@ const putUser = {
 
 
 const getUser = {
-  path: "/users",
-  method: "GET",
-  async handler(ctx) {
-    ctx.body = "get ok";
-  }
-};
+    path: "/users",
+    method: "GET",
+    async handler(ctx) {
+      if (_.isNil(ctx.user)) {
+        throw new ClientError("Unauthorized");
+      }
+      console.log("asdasdaasdaldjkalkdjkla", ctx.user);
+  
+      ctx.body = ctx.user;
+    }
+  };
 
 const signIn =  {
     path: "/auth/login",
@@ -143,19 +148,34 @@ const updateUser = {
     path: "/users/test",
     method: "PUT",
     validate: {
-        headers:{
-            authorization: Joi.string().required(),
-        },
-        body: {
+        //headers:{
+        //    authorization: Joi.string().required(),
+        //},
+        body: Joi.object({
             email: Joi.string().email(),
             name: Joi.string(),
             password: Joi.string().regex(passwordRegex,"password"),
-        },
+        }).or("email","name","password").required(),
         type: "json",
   },
     async handler(ctx) {
-        ctx.body = await User.updateUser(ctx.request.headers["authorization"], ctx.request.body);
-    },
+        //ctx.body = await User.updateUser(ctx.request.headers["authorization"], ctx.request.body);
+        if (_.isNil(ctx.user)) {
+            throw new ClientError("Unauthorized");
+        }
+        const {
+            password = null,
+          } = ctx.request.body;
+          const data = ctx.request.body;
+           if (!_.isNil(password)) {
+            const passwordHash = await User.hashPassword(password);
+            data.password = passwordHash;
+          }
+           const user = await User.findByIdAndUpdate(ctx.user._id, data, {
+            new: true
+          });
+        ctx.body = user;
+    },  
   };
   
 
