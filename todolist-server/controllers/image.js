@@ -54,9 +54,12 @@ const postImage = {
         // _id를 기반으로 파일명을 생성한다.
        // Database Save
       // _id를 기반으로 파일명을 생성해야 한다.
-      const signedUrl = await getSignedUrl("putObject", "file2.jpg");
+      const filename = ctx.user._id+"_"+ _.now()+".jpg";  
+
+      const signedUrl = await getSignedUrl("putObject", filename);
       ctx.body = {
         signedUrl,
+        filename: filename
       }
     }
   };

@@ -63,22 +63,6 @@ const postUser = {
     }
 };
 
-const putUser = {
-  path: "/users",
-  method: "PUT",
-  validate: {
-    body: {
-        email: Joi.string().email(),
-        name: Joi.string(),
-        password: Joi.string().regex(passwordRegex,"password"),
-    },
-    type: "json",
-},
-  async handler(ctx) {
-    ctx.body = "put ok";
-  }
-};
-
 // POST
 //   HTTP - Connection-less
 //      => Stateless
@@ -113,9 +97,7 @@ const getUser = {
     async handler(ctx) {
       if (_.isNil(ctx.user)) {
         throw new ClientError("Unauthorized");
-      }
-      console.log("asdasdaasdaldjkalkdjkla", ctx.user);
-  
+      }  
       ctx.body = ctx.user;
     }
   };
@@ -139,9 +121,8 @@ const signIn =  {
 
 };
 
-
 const updateUser = {
-    path: "/users/test",
+    path: "/users/update",
     method: "PUT",
     validate: {
         //headers:{
@@ -180,7 +161,6 @@ const updateUser = {
 module.exports = [
   getUser,
   postUser,
-  putUser,
   signIn,
   updateUser,
 ];
